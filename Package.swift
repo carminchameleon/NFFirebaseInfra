@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "FirebaseInfra",
     platforms: [
-        .iOS(.v14), // ✅ iOS만 지원
+        .iOS(.v14),
         .macOS(.v15)
    ],
     products: [
@@ -27,8 +27,9 @@ let package = Package(
             dependencies: [
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
-                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
-                ]
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
+            ]
         ),
 
     ]
