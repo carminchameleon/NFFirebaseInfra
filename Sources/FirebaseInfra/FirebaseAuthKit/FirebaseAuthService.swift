@@ -57,4 +57,15 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         )
         _ = try await Auth.auth().currentUser?.link(with: credential)
     }
+    
+    public func signIn(email: String, password: String) async throws -> AuthDataResult {
+        let authResult = try await Auth.auth().signIn(withEmail: email, password: password)
+        return authResult
+    }
+    
+    public func createAccount(email: String, password: String) async throws {
+        guard let user = Auth.auth().currentUser else { return }
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        try await user.link(with: credential)
+    }
 }
