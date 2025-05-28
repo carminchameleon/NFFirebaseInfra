@@ -12,7 +12,7 @@ public struct FirebaseAuthService: AuthServiceProtocol {
     
     public func addStateChangeListener(handler: @escaping (User?) -> Void) -> AuthStateDidChangeListenerHandle {
         print("🖐️ Auth: -------- Add state change listener - changed")
-        return Auth.auth().addStateDidChangeListener { _, user in
+        return Auth.auth().addIDTokenDidChangeListener { _, user in
             handler(user)
         }
     }
@@ -28,9 +28,9 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         return result.user
     }
 
-    public func signOut() throws {
+    public func signOut() async throws {
         print("🖐️ Auth: -------- Sign Out")
-        try Auth.auth().signOut()
+        try await Auth.auth().signOut()
     }
 
     public var currentUser: UserSession? {
@@ -58,9 +58,9 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         _ = try await Auth.auth().currentUser?.link(with: credential)
     }
     
-    public func signIn(email: String, password: String) async throws -> AuthDataResult {
+    public func signIn(email: String, password: String) async throws {
         let authResult = try await Auth.auth().signIn(withEmail: email, password: password)
-        return authResult
+        print("Auth result after sign in ", authResult)
     }
     
     public func createAccount(email: String, password: String) async throws {
