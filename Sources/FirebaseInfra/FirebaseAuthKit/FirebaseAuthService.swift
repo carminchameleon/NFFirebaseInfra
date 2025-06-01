@@ -47,7 +47,7 @@ public struct FirebaseAuthService: AuthServiceProtocol {
 //        )
         let credential = OAuthProvider.credential(providerID: AuthProviderID.apple, idToken: idToken, rawNonce: nonce, accessToken: nil)
         
-        _ = try await Auth.auth().currentUser?.link(with: credential)
+        try await signInWithCredential(credential)
     }
 
     public func upgradeToGoogle(idToken: String, accessToken: String) async throws {
@@ -67,5 +67,9 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         guard let user = Auth.auth().currentUser else { return }
         let credential = EmailAuthProvider.credential(withEmail: email, password: password)
         try await user.link(with: credential)
+    }
+    
+    public func signInWithCredential(_ credential: AuthCredential) async throws {
+        _ = try await Auth.auth().currentUser?.link(with: credential)
     }
 }
