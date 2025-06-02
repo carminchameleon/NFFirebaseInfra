@@ -24,8 +24,8 @@ public struct FirebaseAuthService: AuthServiceProtocol {
 
     public func signInAnonymously() async throws -> User {
         print("🖐️ Auth: -------- Sign In Anonymously")
-        let result = try await Auth.auth().signInAnonymously()
-        return result.user
+        let userDataResult =  try await Auth.auth().signInAnonymously()
+        return userDataResult.user
     }
 
     public func signOut() async throws {
@@ -33,13 +33,19 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         try await Auth.auth().signOut()
     }
 
-    public var currentUser: UserSession? {
+    public var currentUser: User? {
         print("🖐️ Auth: -------- current User")
         guard let user = Auth.auth().currentUser else { return nil }
-        return UserSession(uid: user.uid)
+        return user
+    }
+    
+    public func getCurrentUser() -> User? {
+        print("🖐️ Auth: -------- current User")
+        guard let user = Auth.auth().currentUser else { return nil }
+        return user
     }
 
-    public func upgradeToApple(idToken: String, nonce: String) async throws {
+    public func upgradeToApple(idToken: String, nonce: String) async throws -> User {
 //        let credential = OAuthProvider.credential(
 //            withProviderID: "apple.com",
 //            idToken: idToken,
@@ -47,29 +53,55 @@ public struct FirebaseAuthService: AuthServiceProtocol {
 //        )
         let credential = OAuthProvider.credential(providerID: AuthProviderID.apple, idToken: idToken, rawNonce: nonce, accessToken: nil)
         
-        try await signInWithCredential(credential)
+        let user = try await signInWithCredential(credential)
+        return user
     }
 
-    public func upgradeToGoogle(idToken: String, accessToken: String) async throws {
+    public func signInWithGoogle(idToken: String, accessToken: String) async throws -> User {
         let credential = GoogleAuthProvider.credential(
             withIDToken: idToken,
             accessToken: accessToken
         )
-        _ = try await Auth.auth().currentUser?.link(with: credential)
+        print("구글 로그인 진행 - sign in")
+        let user = try await signInWithCredential(credential)
+        return user
+    }
+    // create account
+    public func upgradeToGoogle(idToken: String, accessToken: String) async throws -> User {
+        let credential = GoogleAuthProvider.credential(
+            withIDToken: idToken,
+            accessToken: accessToken
+        )
+        let user = try await upgradeWithCredential(credential)
+        return user
     }
     
-    public func signIn(email: String, password: String) async throws {
+    public func signIn(email: String, password: String) async throws -> User {
         let authResult = try await Auth.auth().signIn(withEmail: email, password: password)
         print("Auth result after sign in ", authResult)
+        return authResult.user
     }
     
-    public func createAccount(email: String, password: String) async throws {
-        guard let user = Auth.auth().currentUser else { return }
+    public func createAccount(email: String, password: String) async throws -> User {
         let credential = EmailAuthProvider.credential(withEmail: email, password: password)
-        try await user.link(with: credential)
+        let user = try await upgradeWithCredential(credential)
+        return user
     }
     
-    public func signInWithCredential(_ credential: AuthCredential) async throws {
-        _ = try await Auth.auth().currentUser?.link(with: credential)
+    public func signInWithCredential(_ credential: AuthCredential) async throws -> User {
+        let authDataResult = try await Auth.auth().signIn(with: credential)
+        return authDataResult.user
+    }
+    
+    public func upgradeWithCredential(_ credential: AuthCredential) async throws -> User {
+        guard let currentUser = Auth.auth().currentUser else {
+            throw URLError(.badServerResponse)
+        }
+        let userData = try await currentUser.link(with: credential)
+        return userData.user
+    }
+    
+    public func sendResetPasswordEmail(email: String) async throws {
+        try await Auth.auth().sendPasswordReset(withEmail: email)
     }
 }
