@@ -25,7 +25,7 @@ extension FirestoreManager {
     ///     type: Writing.self
     /// )
     /// ```
-    static func getDocument<T: Decodable>(
+    public func getDocument<T: Decodable>(
         collection: NFFirestoreCollection,
         docId: String,
         type: T.Type
@@ -54,7 +54,7 @@ extension FirestoreManager {
     ///
     /// let (writings, lastDoc) = try await FirestoreManager.getDocuments(query: query, type: Writing.self)
     /// ```
-    static func getDocuments<T: Decodable>(
+    public func getDocuments<T: Decodable>(
         query: Query,
         type: T.Type
     ) async throws -> ([T], DocumentSnapshot?) {
@@ -73,7 +73,7 @@ extension FirestoreManager {
     /// ```swift
     /// let (writings, _) = try await FirestoreManager.getDetailedDocuments(query: ..., type: Writing.self)
     /// ```
-    static func getDetailedDocuments<T: Decodable>(
+    public func getDetailedDocuments<T: Decodable>(
         query: Query,
         type: T.Type
     ) async throws -> ([T], DocumentSnapshot?) {

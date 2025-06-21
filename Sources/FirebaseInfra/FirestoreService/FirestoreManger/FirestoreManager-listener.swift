@@ -28,7 +28,7 @@ extension FirestoreManager {
     ///     }
     /// }
     /// ```
-    static func listenToChanges(
+    public func listenToChanges(
         query: Query,
         completion: @escaping (Result<[DocumentChange], Error>) -> Void
     ) -> ListenerRegistration {
@@ -65,7 +65,7 @@ extension FirestoreManager {
     ///     }
     /// }
     /// ```
-    static func listenTo<T: Decodable>(
+    public func listenTo<T: Decodable>(
         query: Query,
         type: T.Type,
         completion: @escaping (Result<[T], Error>) -> Void
@@ -103,7 +103,7 @@ extension FirestoreManager {
     ///     print(result)
     /// }
     /// ```
-    static func listenToDocument<T: Decodable>(
+    public func listenToDocument<T: Decodable>(
         documentRef: DocumentReference,
         type: T.Type,
         completion: @escaping (Result<T?, Error>) -> Void

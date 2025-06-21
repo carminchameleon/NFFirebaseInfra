@@ -22,7 +22,7 @@ extension FirestoreManager {
     ///     docId: "abc123"
     /// )
     /// ```
-    static func delete(
+    public func delete(
         collection: NFFirestoreCollection,
         docId: String
     ) async throws {
@@ -45,7 +45,7 @@ extension FirestoreManager {
     ///
     /// try await FirestoreManager.delete(docRef: ref)
     /// ```
-    static func delete(docRef: DocumentReference) async throws {
+    public func delete(docRef: DocumentReference) async throws {
         try await docRef.delete()
     }
     
@@ -65,7 +65,7 @@ extension FirestoreManager {
        ///     additional: ["deleted_by": "user_456"]
        /// )
        /// ```
-       static func softDelete(
+       public func softDelete(
            collection: NFFirestoreCollection,
            docId: String,
            additional: [String: Any]? = nil

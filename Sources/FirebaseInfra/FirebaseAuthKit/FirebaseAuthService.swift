@@ -10,13 +10,13 @@ import FirebaseAuth
 public struct FirebaseAuthService: AuthServiceProtocol {
     public init() {}
     
+    
     public func addStateChangeListener(handler: @escaping (User?) -> Void) -> AuthStateDidChangeListenerHandle {
         print("🖐️ Auth: -------- Add state change listener - changed")
         return Auth.auth().addIDTokenDidChangeListener { _, user in
             handler(user)
         }
     }
-    
     
     public func removeAddStateChangeListener(handler: AuthStateDidChangeListenerHandle) {
         Auth.auth().removeStateDidChangeListener(handler)
@@ -38,6 +38,14 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         guard let user = Auth.auth().currentUser else { return nil }
         return user
     }
+    
+    public func getUserId() throws -> String {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            throw FirebaseAuth.AuthErrorCode.userNotFound
+        }
+        return userId
+    }
+
     
     public func getCurrentUser() -> User? {
         print("🖐️ Auth: -------- current User")

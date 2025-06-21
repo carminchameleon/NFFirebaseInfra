@@ -24,7 +24,7 @@ extension FirestoreManager {
      ///     data: ["title": "새로운 제목", "views": 101]
      /// )
      /// ```
-     static func update(collection: NFFirestoreCollection, docId: String, data: [String: Any]) async throws {
+    public func update(collection: NFFirestoreCollection, docId: String, data: [String: Any]) async throws {
          try await Firestore.firestore()
              .collection(collection.rawValue)
              .document(docId)
@@ -50,7 +50,7 @@ extension FirestoreManager {
      ///     value: 300
      /// )
      /// ```
-     static func updateField(collection: NFFirestoreCollection, docId: String, key: String, value: Any) async throws {
+    public func updateField(collection: NFFirestoreCollection, docId: String, key: String, value: Any) async throws {
          try await Firestore.firestore()
              .collection(collection.rawValue)
              .document(docId)
@@ -77,7 +77,7 @@ extension FirestoreManager {
      ///     ]
      /// )
      /// ```
-     static func updateFields(collection: NFFirestoreCollection, docId: String, fields: [String: Any]) async throws {
+    public func updateFields(collection: NFFirestoreCollection, docId: String, fields: [String: Any]) async throws {
          try await Firestore.firestore()
              .collection(collection.rawValue)
              .document(docId)

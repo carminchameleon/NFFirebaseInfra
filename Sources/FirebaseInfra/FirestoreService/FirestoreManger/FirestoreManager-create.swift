@@ -6,11 +6,12 @@
 //
 import FirebaseFirestore
 
-enum NFFirestoreCollection: String {
+public enum NFFirestoreCollection: String {
     case users
 }
 
-struct FirestoreManager {
+public struct FirestoreManager {
+    public init() {}
     /// 자동 생성된 문서 ID로 Firestore에 문서를 생성합니다.
     /// Encodable 객체를 전달하면 자동으로 JSON으로 변환되어 저장됩니다.
     ///
@@ -30,7 +31,7 @@ struct FirestoreManager {
     /// let ref = try await FirestoreManager.create(collection: .writings, data: writing)
     /// ```
     @discardableResult
-    static func create<T: Encodable>(collection: NFFirestoreCollection, data: T) async throws -> DocumentReference {
+    public func create<T: Encodable>(collection: NFFirestoreCollection, data: T) async throws -> DocumentReference {
         return try Firestore.firestore()
             .collection(collection.rawValue)
             .addDocument(from: data)
@@ -50,7 +51,7 @@ struct FirestoreManager {
        /// }
        /// ```
        @discardableResult
-       static func createWithAutoId<T: Encodable>(
+        public func createWithAutoId<T: Encodable>(
            collection: NFFirestoreCollection,
            build: (String) -> T
        ) async throws -> DocumentReference {
@@ -80,7 +81,7 @@ struct FirestoreManager {
     /// let user = User(id: "123", name: "Carmen")
     /// try await FirestoreManager.create(collection: .users, docId: "123", data: user)
     /// ```
-    static func create<T: Encodable>(collection: NFFirestoreCollection, docId: String, data: T) async throws {
+    public func create<T: Encodable>(collection: NFFirestoreCollection, docId: String, data: T) async throws {
         try await Firestore.firestore()
             .collection(collection.rawValue)
             .document(docId)
@@ -101,7 +102,7 @@ struct FirestoreManager {
     /// let profile = Profile(username: "calmoon", bio: "iOS dev")
     /// try await FirestoreManager.create(collection: .profiles, docId: "user_456", data: profile, merge: true)
     /// ```
-    static func create<T: Encodable>(collection: NFFirestoreCollection, docId: String, data: T, merge: Bool) async throws {
+    public func create<T: Encodable>(collection: NFFirestoreCollection, docId: String, data: T, merge: Bool) async throws {
         try await Firestore.firestore()
             .collection(collection.rawValue)
             .document(docId)
@@ -122,7 +123,7 @@ struct FirestoreManager {
     /// let data: [String: Any] = ["title": "My Post", "tags": ["swift", "firebase"]]
     /// try await FirestoreManager.create(collection: .writings, docId: "abc123", data: data, merge: true)
     /// ```
-    static func create(collection: NFFirestoreCollection, docId: String, data: [String: Any], merge: Bool = false) async throws {
+    public func create(collection: NFFirestoreCollection, docId: String, data: [String: Any], merge: Bool = false) async throws {
         try await Firestore.firestore()
             .collection(collection.rawValue)
             .document(docId)
