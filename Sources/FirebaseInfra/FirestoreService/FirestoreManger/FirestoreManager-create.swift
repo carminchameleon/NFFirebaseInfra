@@ -8,10 +8,17 @@ import FirebaseFirestore
 
 public enum NFFirestoreCollection: String {
     case users
+    case goals
 }
 
 public struct FirestoreManager {
+
+    
     public init() {}
+    
+    public let userRef = Firestore.firestore().collection(NFFirestoreCollection.users.rawValue)
+    public let goalRef = Firestore.firestore().collection(NFFirestoreCollection.goals.rawValue)
+    
     /// 자동 생성된 문서 ID로 Firestore에 문서를 생성합니다.
     /// Encodable 객체를 전달하면 자동으로 JSON으로 변환되어 저장됩니다.
     ///
