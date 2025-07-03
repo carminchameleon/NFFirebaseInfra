@@ -40,6 +40,12 @@ public struct FirestoreManager {
             .addDocument(from: data)
     }
     
+    public func createDocument(collection: NFFirestoreCollection) async throws -> DocumentReference {
+        let docRef = Firestore.firestore()
+            .collection(collection.rawValue)
+            .document()
+        return docRef
+    }
     /// Firestore 문서 ID를 자동 생성하고, 해당 ID를 포함한 데이터로 저장합니다.
        ///
        /// - Parameters:
