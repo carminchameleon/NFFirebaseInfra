@@ -40,6 +40,7 @@ public struct FirestoreManager {
             .addDocument(from: data)
     }
     
+    // document만 생성해서 document reference를 리턴 (id를 가져다 쓰기 위해서)
     public func createDocument(collection: NFFirestoreCollection) async throws -> DocumentReference {
         let docRef = Firestore.firestore()
             .collection(collection.rawValue)
