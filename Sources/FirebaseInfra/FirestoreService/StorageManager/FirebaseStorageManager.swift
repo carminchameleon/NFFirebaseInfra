@@ -5,19 +5,33 @@
 //  Created by Eunji Hwang on 20/9/2025.
 //
 import FirebaseStorage
-
+import Firebase
+import SwiftUI
 public final class FirebaseStorageManager {
-    public init() {}
-    
-    private let storage = Storage.storage()
+    public init() {
+            guard let app = FirebaseApp.app() else {
+                fatalError("❌ FirebaseApp is not configured. Call FirebaseApp.configure() before using FirebaseStorageManager.")
+            }
+            self.storage = Storage.storage(app: app)
+        }
+    var storage: Storage
+//    private let storage = Storage.storage()
     
     // MARK: - Upload
     //    let url = try await storageManager.uploadData(
     //        path: "actionBoards/123/cover.jpg",
     //        data: imageData
     //    )
-    func uploadData(path: String, data: Data, contentType: String? = nil) async throws -> URL {
-        let reference = getReference(path: path)
+    
+    public func covertImageToData(image: UIImage) throws -> Data {
+        guard let data = image.jpegData(compressionQuality: 1) else {
+            throw URLError(.backgroundSessionWasDisconnected)
+        }
+        return data
+    }
+    
+    public func uploadData(path: String, data: Data, contentType: String? = nil) async throws -> URL {
+        let ref = getReference(path: path)
         let meta = StorageMetadata()
         meta.contentType = contentType ?? "image/jpeg"
         meta.cacheControl = "no-cache"
@@ -26,7 +40,7 @@ public final class FirebaseStorageManager {
         return try await ref.downloadURL()
     }
         
-    func getReference(path: String) {
+    public func getReference(path: String) -> StorageReference {
         return storage.reference(withPath: path)
     }
     
@@ -37,10 +51,10 @@ public final class FirebaseStorageManager {
     }
 
     /// Data 다운로드
-    public func downloadData(path: String, maxSize: Int64 = 5 * 1024 * 1024) async throws -> Data {
-        let ref = storage.reference(withPath: path)
-        return try await ref.getData(maxSize: maxSize)
-    }
+//    public func downloadData(path: String, maxSize: Int64 = 5 * 1024 * 1024) async throws -> Data {
+//        let ref = storage.reference(withPath: path)
+//        return try await ref.getData(maxSize: maxSize)
+//    }
     
     func converGSToHttps(gsPath: String) async throws -> URL {
         let storageRef = storage.reference(forURL: gsPath)

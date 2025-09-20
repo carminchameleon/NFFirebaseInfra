@@ -9,6 +9,7 @@ import FirebaseFirestore
 public enum NFFirestoreCollection: String {
     case users
     case goals
+    case actionBoards
 }
 
 public struct FirestoreManager {
