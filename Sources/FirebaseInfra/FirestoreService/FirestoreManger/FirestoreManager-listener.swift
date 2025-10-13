@@ -123,4 +123,8 @@ extension FirestoreManager {
             completion(.success(model))
         }
     }
+    
+    public func getCollectionRef(collection: NFFirestoreCollection) -> CollectionReference {
+        return Firestore.firestore().collection(collection.rawValue)
+    }
 }
