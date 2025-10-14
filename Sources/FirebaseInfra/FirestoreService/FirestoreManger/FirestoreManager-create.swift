@@ -141,4 +141,10 @@ public struct FirestoreManager {
             .document(docId)
             .setData(data, merge: merge)
     }
+    
+    public func getCollectionRef(collection: NFFirestoreCollection) -> CollectionReference {
+        return Firestore.firestore().collection(collection.rawValue)
+    }
+    
+    
 }
