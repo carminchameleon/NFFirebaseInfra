@@ -124,5 +124,49 @@ extension FirestoreManager {
         }
     }
     
+    
+    /// 단일 문서를 리스닝하여 해당 문서의 모델 데이터를 전달합니다.
+    ///
+    /// - Parameters:
+    ///   - documentRef: 감시할 문서
+    ///   - type: 디코딩할 모델 타입
+    ///   - completion: 해당 문서의 모델 또는 nil
+    ///
+    /// - Example:
+    /// ```swift
+    /// let docRef = Firestore.firestore().collection("writings").document("abc123")
+    /// let listener = FirestoreManager.listenToDocument(documentRef: docRef, type: Writing.self) { result in
+    ///     print(result)
+    /// }
+    /// ```
+    public func listenToDocument<T: Decodable>(
+        collection: NFFirestoreCollection,
+        id: String,
+        type: T.Type,
+        completion: @escaping (Result<T, Error>) -> Void
+    ) -> ListenerRegistration {
+        
+        let documentRef = Firestore.firestore().collection(collection.rawValue).document(id)
+        return documentRef.addSnapshotListener { snapshot, error in
+            
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let snapshot = snapshot, snapshot.exists else {
+                completion(.failure(NSError(domain: "Firestore", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nil snapshot"])))
+                return
+            }
+            
+            do {
+                let model = try snapshot.data(as: T.self)
+                completion(.success(model))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
   
 }

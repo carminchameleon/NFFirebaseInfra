@@ -13,6 +13,7 @@ public final class FirebaseStorageManager {
                 fatalError("❌ FirebaseApp is not configured. Call FirebaseApp.configure() before using FirebaseStorageManager.")
             }
             self.storage = Storage.storage(app: app)
+        
         }
     var storage: Storage
 //    private let storage = Storage.storage()
@@ -24,20 +25,58 @@ public final class FirebaseStorageManager {
     //    )
     
     public func covertImageToData(image: UIImage) throws -> Data {
-        guard let data = image.jpegData(compressionQuality: 1) else {
+        guard let data = image.jpegData(compressionQuality: 0.75) else {
             throw URLError(.backgroundSessionWasDisconnected)
         }
         return data
     }
     
     public func uploadData(path: String, data: Data, contentType: String? = nil) async throws -> URL {
+        let startTime = Date()
+        print("🚀 Firebase upload started - Path: \(path)")
+        print("🚀 Data size: \(String(format: "%.2f", Double(data.count) / 1024.0)) KB")
+        
         let ref = getReference(path: path)
         let meta = StorageMetadata()
         meta.contentType = contentType ?? "image/jpeg"
         meta.cacheControl = "no-cache"
         
+        let uploadStart = Date()
         _ = try await ref.putDataAsync(data, metadata: meta)
-        return try await ref.downloadURL()
+        let uploadDuration = Date().timeIntervalSince(uploadStart)
+        print("✅ Upload to Firebase completed in \(String(format: "%.2f", uploadDuration))s")
+        
+        // Retry logic for eventual consistency issues
+        let urlStart = Date()
+        var lastError: Error?
+        
+        for attempt in 1...5 {
+            do {
+                let url = try await ref.downloadURL()
+                let urlDuration = Date().timeIntervalSince(urlStart)
+                if attempt > 1 {
+                    print("✅ Download URL retrieved on attempt \(attempt) in \(String(format: "%.2f", urlDuration))s")
+                } else {
+                    print("✅ Download URL retrieved in \(String(format: "%.2f", urlDuration))s")
+                }
+                
+                let totalDuration = Date().timeIntervalSince(startTime)
+                print("✅ Total Firebase operation: \(String(format: "%.2f", totalDuration))s")
+                
+                return url
+            } catch {
+                lastError = error
+                print("⚠️ Attempt \(attempt) failed: \(error.localizedDescription)")
+                if attempt < 5 {
+                    // Exponential backoff: 100ms, 200ms, 400ms, 800ms
+                    let delayMs = UInt64(100 * (1 << (attempt - 1))) * 1_000_000
+                    try? await Task.sleep(nanoseconds: delayMs)
+                }
+            }
+        }
+        
+        print("❌ All retry attempts failed")
+        throw lastError ?? NSError(domain: "FirebaseStorageManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get download URL after retries"])
     }
         
     public func getReference(path: String) -> StorageReference {
