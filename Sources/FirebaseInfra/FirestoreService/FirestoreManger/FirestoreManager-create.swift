@@ -11,6 +11,7 @@ public enum NFFirestoreCollection: String {
     case goals
     case actionBoards
     case actions
+    case templates
 }
 
 public struct FirestoreManager {
