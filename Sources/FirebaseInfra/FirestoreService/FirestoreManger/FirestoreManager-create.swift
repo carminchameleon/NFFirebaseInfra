@@ -12,6 +12,7 @@ public enum NFFirestoreCollection: String {
     case actionBoards
     case actions
     case templates
+    case curations
 }
 
 public struct FirestoreManager {
