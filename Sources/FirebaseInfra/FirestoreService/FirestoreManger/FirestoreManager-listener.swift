@@ -168,5 +168,28 @@ extension FirestoreManager {
         }
     }
     
-  
+    
+    public func listenTo<T: Decodable>(
+        query: Query,
+        type: T.Type,
+        completion: @escaping (Result<([T], DocumentSnapshot?), Error>) -> Void
+    ) -> ListenerRegistration {
+        query.addSnapshotListener { snapshot, error in
+            if let error { completion(.failure(error)); return }
+            guard let snapshot else {
+                completion(.success(([], nil)))
+                return
+            }
+
+            do {
+                let items: [T] = try snapshot.documents.compactMap { doc in
+                    try doc.data(as: T.self)
+                }
+                let last = snapshot.documents.last
+                completion(.success((items, last)))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
 }
