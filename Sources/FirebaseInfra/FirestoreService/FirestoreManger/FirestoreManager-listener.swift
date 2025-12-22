@@ -30,7 +30,7 @@ extension FirestoreManager {
     /// ```
     public func listenToChanges(
         query: Query,
-        completion: @escaping (Result<[DocumentChange], Error>) -> Void
+        completion: @escaping (Result<QuerySnapshot, Error>) -> Void
     ) -> ListenerRegistration {
         return query.addSnapshotListener { snapshot, error in
             if let error = error {
@@ -39,11 +39,11 @@ extension FirestoreManager {
             }
 
             guard let snapshot = snapshot else {
-                completion(.success([]))
+                completion(.failure(CancellationError.init()))
                 return
             }
 
-            completion(.success(snapshot.documentChanges))
+            completion(.success(snapshot))
         }
     }
 
