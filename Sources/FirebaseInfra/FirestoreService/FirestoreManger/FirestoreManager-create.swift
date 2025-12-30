@@ -150,5 +150,11 @@ public struct FirestoreManager {
         return Firestore.firestore().collection(collection.rawValue)
     }
     
+    public func getSubCollection(mainCollection: NFFirestoreCollection, id: String, subCollection: NFFirestoreCollection) -> CollectionReference {
+        let mainRef = Firestore.firestore().collection(mainCollection.rawValue)
+        return mainRef.document(id).collection(subCollection.rawValue)
+    }
+    
+    
     
 }
