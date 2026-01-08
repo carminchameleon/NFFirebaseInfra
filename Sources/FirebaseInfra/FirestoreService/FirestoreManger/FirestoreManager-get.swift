@@ -37,6 +37,31 @@ extension FirestoreManager {
 
         return try snapshot.data(as: T.self)
     }
+  
+    public func getDocument<T: Decodable>(
+        collection: NFFirestoreCollection,
+        docId: String,
+        subCollection: NFFirestoreCollection,
+        subDocId: String,
+        type: T.Type
+    ) async throws -> T? {
+        let snapshot = try await Firestore.firestore()
+            .collection(collection.rawValue)
+            .document(docId)
+            .collection(subCollection.rawValue)
+            .document(subDocId)
+            .getDocument()
+
+        return try snapshot.data(as: T.self)
+    }
+  
+    
+    
+//    public func getSubCollection(mainCollection: NFFirestoreCollection, id: String, subCollection: NFFirestoreCollection, subId: String) -> CollectionReference {
+//        let mainRef = Firestore.firestore().collection(mainCollection.rawValue).document(id).collection(subCollection.rawValue).document(subId)
+//
+//    }
+
 
     /// Firestore 쿼리를 실행하고, 여러 문서를 가져옵니다.
     ///

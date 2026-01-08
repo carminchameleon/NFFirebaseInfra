@@ -154,7 +154,7 @@ public struct FirestoreManager {
         let mainRef = Firestore.firestore().collection(mainCollection.rawValue)
         return mainRef.document(id).collection(subCollection.rawValue)
     }
-    
+       
     
     
 }
