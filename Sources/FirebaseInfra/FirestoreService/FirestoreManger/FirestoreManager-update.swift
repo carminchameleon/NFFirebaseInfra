@@ -83,4 +83,26 @@ extension FirestoreManager {
              .document(docId)
              .updateData(fields)
      }
+    
+    func runTransaction(_ block: @escaping (Transaction) throws -> Void) async throws {
+           let db = Firestore.firestore()
+
+           try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+               db.runTransaction({ (tx, errorPointer) -> Any? in
+                   do {
+                       try block(tx)
+                       return nil
+                   } catch {
+                       errorPointer?.pointee = error as NSError
+                       return nil
+                   }
+               }, completion: { _, error in
+                   if let error {
+                       continuation.resume(throwing: error)
+                   } else {
+                       continuation.resume(returning: ())
+                   }
+               })
+           }
+       }
 }

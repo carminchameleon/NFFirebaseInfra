@@ -21,7 +21,9 @@ public enum NFFirestoreCollection: String {
 public struct FirestoreManager {
 
     public init() {}
-    
+    public func getDB() -> Firestore {
+        return Firestore.firestore()
+    }
     /// 자동 생성된 문서 ID로 Firestore에 문서를 생성합니다.
     /// Encodable 객체를 전달하면 자동으로 JSON으로 변환되어 저장됩니다.
     ///
