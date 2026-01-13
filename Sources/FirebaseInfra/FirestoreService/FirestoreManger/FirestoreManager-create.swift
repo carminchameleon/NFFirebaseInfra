@@ -15,6 +15,7 @@ public enum NFFirestoreCollection: String {
     case curations
     case posts
     case templateStacks
+    case bookmarks
 }
 
 public struct FirestoreManager {
