@@ -84,7 +84,7 @@ extension FirestoreManager {
              .updateData(fields)
      }
     
-    func runTransaction(_ block: @escaping (Transaction) throws -> Void) async throws {
+    public func runTransaction(_ block: @escaping (Transaction) throws -> Void) async throws {
            let db = Firestore.firestore()
 
            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
