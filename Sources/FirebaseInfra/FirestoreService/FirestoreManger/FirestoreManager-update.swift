@@ -105,4 +105,22 @@ extension FirestoreManager {
                })
            }
        }
+    
+    public func runBatch(
+         _ block: (WriteBatch) throws -> Void
+     ) async throws {
+         let batch = Firestore.firestore().batch()
+
+         try block(batch)
+
+         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+             batch.commit { error in
+                 if let error {
+                     continuation.resume(throwing: error)
+                 } else {
+                     continuation.resume(returning: ())
+                 }
+             }
+         }
+     }
 }
