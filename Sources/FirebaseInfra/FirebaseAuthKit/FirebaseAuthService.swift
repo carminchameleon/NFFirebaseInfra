@@ -61,27 +61,45 @@ public struct FirebaseAuthService: AuthServiceProtocol {
 //        )
         let credential = OAuthProvider.credential(providerID: AuthProviderID.apple, idToken: idToken, rawNonce: nonce, accessToken: nil)
         
-        let user = try await signInWithCredential(credential)
+        let (user, isNewAccout) = try await signInWithCredential(credential)
         return user
     }
 
-    public func signInWithGoogle(idToken: String, accessToken: String) async throws -> User {
+    public func signInWithGoogle(idToken: String, accessToken: String) async throws -> (User, Bool) {
         let credential = GoogleAuthProvider.credential(
             withIDToken: idToken,
             accessToken: accessToken
         )
         print("구글 로그인 진행 - sign in")
-        let user = try await signInWithCredential(credential)
-        return user
+        let (user, isNewAccount) = try await signInWithCredential(credential)
+        print("진행 완료")
+        return (user, isNewAccount)
     }
     // create account
-    public func upgradeToGoogle(idToken: String, accessToken: String) async throws -> User {
-        let credential = GoogleAuthProvider.credential(
-            withIDToken: idToken,
-            accessToken: accessToken
-        )
-        let user = try await upgradeWithCredential(credential)
-        return user
+    public func upgradeToGoogle(idToken: String, accessToken: String) async throws -> (User, Bool) {
+        do {
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: accessToken
+            )
+            let user = try await upgradeWithCredential(credential)
+            return (user, true)
+        } catch {
+            let nsError = error as NSError
+                let code = AuthErrorCode(rawValue: nsError.code)
+
+                switch code {
+                case .emailAlreadyInUse,
+                     .credentialAlreadyInUse,
+                     .accountExistsWithDifferentCredential:
+                    print("이미 있는 유저라 sign in 으로 진행")
+                    let result = try await self.signInWithGoogle(idToken: idToken, accessToken: accessToken)
+                    return result
+                default:
+                    throw error
+                }
+            
+        }
     }
     
     public func signIn(email: String, password: String) async throws -> User {
@@ -96,9 +114,12 @@ public struct FirebaseAuthService: AuthServiceProtocol {
         return user
     }
     
-    public func signInWithCredential(_ credential: AuthCredential) async throws -> User {
+    public func signInWithCredential(_ credential: AuthCredential) async throws -> (User, Bool) {
         let authDataResult = try await Auth.auth().signIn(with: credential)
-        return authDataResult.user
+        print("계정 초기 정보", authDataResult.additionalUserInfo)
+        print("이거 새로운 계정인가요??", authDataResult.additionalUserInfo?.isNewUser)
+        let isNewUser = authDataResult.additionalUserInfo?.isNewUser ?? false
+        return (authDataResult.user, isNewUser)
     }
     
     public func upgradeWithCredential(_ credential: AuthCredential) async throws -> User {

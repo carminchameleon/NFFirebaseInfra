@@ -11,7 +11,8 @@ public protocol AuthServiceProtocol {
     func signInAnonymously() async throws -> User
     func signOut() async throws
     func upgradeToApple(idToken: String, nonce: String) async throws -> User
-    func upgradeToGoogle(idToken: String, accessToken: String) async throws -> User
+    // if it's real create account -> true, sign in -> false
+    func upgradeToGoogle(idToken: String, accessToken: String) async throws -> (User, Bool)
     var currentUser: User? { get }
     
 }
