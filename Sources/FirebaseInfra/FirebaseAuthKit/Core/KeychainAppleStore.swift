@@ -9,9 +9,9 @@ import SwiftKeychainWrapper
 import Foundation
 
 public protocol AppleProfileStore: Sendable {
-    func save(email: String?, givenName: String?, appleUserId: String)
+    func save(email: String?, fullName: String?, appleUserId: String)
     func loadEmail() -> String?
-    func loadGivenName() -> String?
+    func loadFullName() -> String?
     func loadAppleUserId() -> String?
 }
 
@@ -29,18 +29,18 @@ public struct KeychainAppleStore: AppleProfileStore {
 
     private enum Keys {
         static let email = "appleSignInEmail"
-        static let givenName = "appleSignInGivenName"
+        static let fullName = "appleSignInFullName"
         static let userId = "appleSignInIdentifier"
     }
 
-    public func save(email: String?, givenName: String?, appleUserId: String) {
+    public func save(email: String?, fullName: String?, appleUserId: String) {
         // nil이면 저장 안 하거나, 기존 값 유지하고 싶으면 조건으로 제어 가능
         if let email { KeychainWrapper.standard.set(email, forKey: Keys.email) }
-        if let givenName { KeychainWrapper.standard.set(givenName, forKey: Keys.givenName) }
+        if let fullName { KeychainWrapper.standard.set(fullName, forKey: Keys.fullName) }
         KeychainWrapper.standard.set(appleUserId, forKey: Keys.userId)
     }
 
     public func loadEmail() -> String? { KeychainWrapper.standard.string(forKey: Keys.email) }
-    public func loadGivenName() -> String? { KeychainWrapper.standard.string(forKey: Keys.givenName) }
+    public func loadFullName() -> String? { KeychainWrapper.standard.string(forKey: Keys.fullName) }
     public func loadAppleUserId() -> String? { KeychainWrapper.standard.string(forKey: Keys.userId) }
 }

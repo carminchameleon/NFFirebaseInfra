@@ -14,13 +14,15 @@ public struct AuthUser: Sendable {
     public let email: String?
     public let displayName: String?
     public let photoURL: URL?
+    public let appId: String?
     public let isAnonymous: Bool
 
-    public init(uid: String, email: String?, displayName: String?, photoURL: URL?, isAnonymous: Bool) {
+    public init(uid: String, email: String?, displayName: String?, photoURL: URL?, appId: String?, isAnonymous: Bool) {
         self.uid = uid
         self.email = email
         self.displayName = displayName
         self.photoURL = photoURL
+        self.appId = appId
         self.isAnonymous = isAnonymous
     }
 }
