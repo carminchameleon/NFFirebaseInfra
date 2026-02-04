@@ -16,7 +16,12 @@ let package = Package(
             targets: ["FirebaseInfra"]),
     ],
     dependencies: [
-      .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.12.0")
+      .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.12.0"),
+      // Keychain
+      .package(
+          url: "https://github.com/jrendel/SwiftKeychainWrapper",
+          from: "4.0.0"
+      )
     ],
 
     targets: [
@@ -28,7 +33,8 @@ let package = Package(
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
-                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+                .product(name: "SwiftKeychainWrapper", package: "SwiftKeychainWrapper")
             ]
         ),
 
