@@ -13,10 +13,10 @@ public protocol AppleAuthLinking: Sendable {
     /// 익명 유저를 Apple로 "연결(link)" 시도.
     /// - 실패가 "이미 다른 계정에 연결된 credential"이면 sign-in으로 fallback.
     /// - 반환 Bool은 (내 앱 관점에서) “link 성공(=새로 연결)”이면 true, fallback sign-in이면 Firebase의 isNewUser를 반환.
-    func upgradeToApple(idToken: String, nonce: String) async throws -> (User, Bool)
+    func upgradeToApple(idToken: String, nonce: String) async throws -> User
 
     /// 기존 Apple 계정으로 sign-in
-    func signInWithApple(idToken: String, nonce: String) async throws -> (User, Bool)
+    func signInWithApple(idToken: String, nonce: String) async throws -> User
 }
 
 
@@ -65,15 +65,8 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         guard let user = Auth.auth().currentUser else { return nil }
         return user
     }
-
-//    public func upgradeToApple(idToken: String, nonce: String) async throws -> User {
-//        let credential = OAuthProvider.credential(providerID: AuthProviderID.apple, idToken: idToken, rawNonce: nonce, accessToken: nil)
-//        
-//        let (user, isNewAccout) = try await signInWithCredential(credential)
-//        return user
-//    }
-
-    public func signInWithGoogle(idToken: String, accessToken: String) async throws -> (User, Bool) {
+    
+    public func signInWithGoogle(idToken: String, accessToken: String) async throws -> AuthResult {
         let credential = GoogleAuthProvider.credential(
             withIDToken: idToken,
             accessToken: accessToken
@@ -81,17 +74,31 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         print("구글 로그인 진행 - sign in")
         let (user, isNewAccount) = try await signInWithCredential(credential)
         print("진행 완료")
-        return (user, isNewAccount)
+        let authUser = AuthUser(uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL,
+                                appId: nil,
+                                isAnonymous: false)
+        let result = AuthResult(user: authUser, isNewUser: isNewAccount, provider: .google)
+        return result
     }
-    // create account
-    public func upgradeToGoogle(idToken: String, accessToken: String) async throws -> (User, Bool) {
+
+    public func upgradeToGoogle(idToken: String, accessToken: String) async throws -> AuthResult {
         do {
             let credential = GoogleAuthProvider.credential(
                 withIDToken: idToken,
                 accessToken: accessToken
             )
             let user = try await upgradeWithCredential(credential)
-            return (user, true)
+            let authUser = AuthUser(uid: user.uid,
+                                    email: user.email,
+                                    displayName: user.displayName,
+                                    photoURL: user.photoURL,
+                                    appId: nil,
+                                    isAnonymous: false)
+            let result = AuthResult(user: authUser, isNewUser: true, provider: .google)
+            return result
         } catch {
             let nsError = error as NSError
                 let code = AuthErrorCode(rawValue: nsError.code)
@@ -110,16 +117,32 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         }
     }
     
-    public func signIn(email: String, password: String) async throws -> User {
+    public func signIn(email: String, password: String) async throws -> AuthResult {
         let authResult = try await Auth.auth().signIn(withEmail: email, password: password)
         print("Auth result after sign in ", authResult)
-        return authResult.user
+        let authUser = AuthUser(uid: authResult.user.uid,
+                                email: authResult.user.email,
+                                displayName: authResult.user.displayName,
+                                photoURL: authResult.user.photoURL,
+                                appId: nil,
+                                isAnonymous: false)
+        
+        let result = AuthResult(user: authUser, isNewUser: true, provider: .google)
+        return result
     }
     
-    public func createAccount(email: String, password: String) async throws -> User {
+    public func createAccount(email: String, password: String) async throws -> AuthResult {
         let credential = EmailAuthProvider.credential(withEmail: email, password: password)
         let user = try await upgradeWithCredential(credential)
-        return user
+        let authUser = AuthUser(uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL,
+                                appId: nil,
+                                isAnonymous: false)
+        
+        let result = AuthResult(user: authUser, isNewUser: true, provider: .google)
+        return result
     }
     
     public func signInWithCredential(_ credential: AuthCredential) async throws -> (User, Bool) {
@@ -151,7 +174,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }
 
-    public func upgradeToApple(idToken: String, nonce: String) async throws -> (User, Bool) {
+    public func upgradeToApple(idToken: String, nonce: String) async throws -> User {
         // ✅ Apple fullName은 Firebase credential에 직접 넣을 수 있는 API가 일관적이지 않아서
         // 여기서는 idToken + nonce만으로 credential 생성(표준 방식)
         let credential = OAuthProvider.credential(
@@ -164,11 +187,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         do {
             // 1) 익명 -> link
             let user = try await upgradeWithCredential(credential)
-            print("uid", user.uid)
-            print("email", user.email)
-            print("displayName", user.displayName)
-            // link가 성공했다는 의미에서 true
-            return (user, true)
+            return user
         } catch {
             // 2) "이미 다른 계정이 이 credential을 가지고 있음"이면 sign-in으로 fallback
             let nsError = error as NSError
@@ -177,77 +196,22 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
             switch code {
             case .emailAlreadyInUse, .credentialAlreadyInUse, .accountExistsWithDifferentCredential:
                 print("이미 있는 계정이라 sign-in으로 fallback")
-                return try await signInWithCredential(credential)
+                let (user, _) = try await signInWithCredential(credential)
+                return user
             default:
                 throw error
             }
         }
     }
 
-    public func signInWithApple(idToken: String, nonce: String) async throws -> (User, Bool) {
+    public func signInWithApple(idToken: String, nonce: String) async throws -> User {
         let credential = OAuthProvider.credential(
             providerID: AuthProviderID.apple,
             idToken: idToken,
             rawNonce: nonce,
             accessToken: nil
         )
-        return try await signInWithCredential(credential)
-    
+        let (user, _) = try await signInWithCredential(credential)
+        return user
     }
 }
-
-
-//extension FirebaseAuthService {
-
-
-
-
-//
-//    // MARK: - Apple
-//       public func upgradeAnonymousWithApple() async throws -> (User, Bool) {
-//           guard presenterProvider != nil else { throw AuthKitError.presenterNotConfigured }
-//
-//           // 1) Apple UI로 토큰/nonce/email/name 가져오기
-//           let apple = try await appleUI.authorize()
-//
-//           // 2) Apple email/name은 다음에 안 줄 수도 있으니 저장 (유저 UX 유지 목적)
-//           keychainStore.save(email: apple.email, givenName: apple.fullName?.givenName, appleUserId: apple.appleUserId)
-//
-//           // 3) 익명→link 시도. 중복이면 sign-in fallback (정책은 FirebaseAuthService 내부)
-//
-//           let credential = OAuthProvider.appleCredential(withIDToken: apple.idTokenString,
-//                                                          rawNonce: apple.rawNonce,
-//                                                          fullName: apple.fullName)
-//           do {
-//               let user = try await upgradeWithCredential(credential)
-//
-//               return (user, true)
-//           } catch {
-//               let nsError = error as NSError
-//               let code = AuthErrorCode(rawValue: nsError.code)
-//
-//               switch code {
-//               case .emailAlreadyInUse,
-//                       .credentialAlreadyInUse,
-//                       .accountExistsWithDifferentCredential:
-//                   print("이미 있는 유저라 sign in 으로 진행")
-//                   let result = try await self.signInWithCredential(credential)
-//                   return result
-//               default:
-//                   throw error
-//               }
-//
-//           }
-//       }
-//
-//    @MainActor
-//    public func signInWithApple() async throws -> (User, Bool) {
-//        guard presenterProvider != nil else { throw AuthKitError.presenterNotConfigured }
-//
-//        let apple = try await appleUI.authorize()
-//        let credential = OAuthProvider.appleCredential(withIDToken: apple.idTokenString,
-//                                                       rawNonce: apple.rawNonce,
-//                                                       fullName: apple.fullName)
-//        let result = try await self.signInWithCredential(credential)
-//        return result
-//   }

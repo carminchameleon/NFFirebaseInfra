@@ -45,7 +45,7 @@ public final class AuthKit {
     /// - email/name/userId는 다음에 nil일 수 있으니 Keychain에 저장(UX 유지)
     /// - FirebaseAuthService가 link 시도 + 중복이면 sign-in fallback 처리
     @MainActor
-    public func upgradeAnonymousWithApple() async throws -> (User, Bool) {
+    public func upgradeAnonymousWithApple() async throws -> User {
         // 1) Apple UI 띄워 payload 확보
         let apple = try await appleUI.authorize()
         print("apple에서 주는 데이터 - email", apple.email)
@@ -93,14 +93,14 @@ public final class AuthKit {
         if email == nil {
             print("이미 있는 유저에요!!!")
             // 이미 있는 것
-            let (user, _) = try await auth.signInWithApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
+            let user = try await auth.signInWithApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
             print("user", user.uid)
             print("email", user.email)
             let authUser = AuthUser(uid: user.uid,
                                     email: user.email,
                                     displayName: user.displayName,
                                     photoURL: user.photoURL,
-                                    appId: nil,
+                                    appId: apple.appleUserId,
                                     isAnonymous: false)
             return AuthResult(user: authUser, isNewUser: isNewUser, provider: .apple)
         } else {
@@ -110,7 +110,7 @@ public final class AuthKit {
             appleProfileStore.save(email: apple.email, fullName: displayName, appleUserId: apple.appleUserId)
             
             /// 애플  Link
-            let (user, _) =  try await auth.upgradeToApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
+            let user =  try await auth.upgradeToApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
             let authUser = AuthUser(uid: user.uid,
                                     email: email,
                                     displayName: displayName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -145,8 +145,7 @@ public final class AuthKit {
                 appleUserId: apple.appleUserId
             )
         }
-        let (user, _) = try await auth.signInWithApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
-        
+        let user = try await auth.signInWithApple(idToken: apple.idTokenString, nonce: apple.rawNonce)
         let authUser = AuthUser(uid: user.uid,
                                 email: user.email,
                                 displayName: displayName,

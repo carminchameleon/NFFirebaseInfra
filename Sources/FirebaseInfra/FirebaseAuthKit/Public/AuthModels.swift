@@ -44,4 +44,10 @@ public struct AuthResult: Sendable {
         self.isNewUser = isNewUser
         self.provider = provider
     }
+    
+    public static var mockData: AuthResult {
+        return AuthResult(user: AuthUser(uid: "", email: nil, displayName: nil, photoURL: nil, appId: nil, isAnonymous: true), isNewUser: false, provider: .anonymous)
+    }
+    
+    
 }
