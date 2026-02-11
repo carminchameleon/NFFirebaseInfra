@@ -146,7 +146,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         return result
     }
     
-    public func signInWithCredential(_ credential: AuthCredential) async throws -> (User, Bool) {
+    public func signInWithCredential(_ credential: AuthCredential) async throws -> (AuthUser, Bool) {
         let authDataResult = try await Auth.auth().signIn(with: credential)
         print("auth data result email - ", authDataResult.user.email)
         print("auth data result name - ", authDataResult.user.displayName)
@@ -154,10 +154,10 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         print("계정 초기 정보", authDataResult.additionalUserInfo)
         print("이거 새로운 계정인가요??", authDataResult.additionalUserInfo?.isNewUser)
         let isNewUser = authDataResult.additionalUserInfo?.isNewUser ?? false
-        return (authDataResult.user, isNewUser)
+        return (authDataResult.user.getAuthUser(), isNewUser)
     }
     
-    public func upgradeWithCredential(_ credential: AuthCredential) async throws -> User {
+    public func upgradeWithCredential(_ credential: AuthCredential) async throws -> AuthUser {
         guard let currentUser = Auth.auth().currentUser else {
             throw URLError(.badServerResponse)
         }
@@ -168,7 +168,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         print("계정 초기 정보", authDataResult.additionalUserInfo)
         print("이거 새로운 계정인가요??", authDataResult.additionalUserInfo?.isNewUser)
         
-        return authDataResult.user
+        return authDataResult.user.getAuthUser()
     }
     
     public func sendResetPasswordEmail(email: String) async throws {
@@ -188,7 +188,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         do {
             // 1) 익명 -> link
             let user = try await upgradeWithCredential(credential)
-            return user.getAuthUser()
+            return user
         } catch {
             // 2) "이미 다른 계정이 이 credential을 가지고 있음"이면 sign-in으로 fallback
             let nsError = error as NSError
@@ -198,7 +198,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
             case .emailAlreadyInUse, .credentialAlreadyInUse, .accountExistsWithDifferentCredential:
                 print("이미 있는 계정이라 sign-in으로 fallback")
                 let (user, _) = try await signInWithCredential(credential)
-                return user.getAuthUser()
+                return user
             default:
                 throw error
             }
@@ -213,6 +213,6 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
             accessToken: nil
         )
         let (user, _) = try await signInWithCredential(credential)
-        return user.getAuthUser()
+        return user
     }
 }
