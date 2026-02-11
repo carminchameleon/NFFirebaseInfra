@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import FirebaseAuth
 /// ✅ 앱이 FirebaseAuth.User를 직접 다루지 않게 하기 위한 래퍼
 /// - 패키지 바깥(앱)은 FirebaseAuth를 import할 필요가 없어짐
 public struct AuthUser: Sendable {
@@ -24,6 +24,19 @@ public struct AuthUser: Sendable {
         self.photoURL = photoURL
         self.appId = appId
         self.isAnonymous = isAnonymous
+    }
+}
+
+extension User {
+    public func getAuthUser(appId: String? = nil) -> AuthUser {
+        return AuthUser(
+            uid: uid,
+            email: email,
+            displayName: displayName,
+            photoURL: photoURL,
+            appId: appId,
+            isAnonymous: isAnonymous
+        )
     }
 }
 

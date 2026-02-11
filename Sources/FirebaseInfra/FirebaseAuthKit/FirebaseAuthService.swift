@@ -13,14 +13,15 @@ public protocol AppleAuthLinking: Sendable {
     /// 익명 유저를 Apple로 "연결(link)" 시도.
     /// - 실패가 "이미 다른 계정에 연결된 credential"이면 sign-in으로 fallback.
     /// - 반환 Bool은 (내 앱 관점에서) “link 성공(=새로 연결)”이면 true, fallback sign-in이면 Firebase의 isNewUser를 반환.
-    func upgradeToApple(idToken: String, nonce: String) async throws -> User
+    func upgradeToApple(idToken: String, nonce: String) async throws -> AuthUser
 
     /// 기존 Apple 계정으로 sign-in
-    func signInWithApple(idToken: String, nonce: String) async throws -> User
+    func signInWithApple(idToken: String, nonce: String) async throws -> AuthUser
 }
 
 
 public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
+    
    
     public init() {}
 
@@ -35,10 +36,10 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         Auth.auth().removeStateDidChangeListener(handler)
     }
 
-    public func signInAnonymously() async throws -> User {
+    public func signInAnonymously() async throws -> AuthUser {
         print("🖐️ Auth: -------- Sign In Anonymously")
         let userDataResult =  try await Auth.auth().signInAnonymously()
-        return userDataResult.user
+        return userDataResult.user.getAuthUser()
     }
 
     public func signOut() async throws {
@@ -46,10 +47,10 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         try await Auth.auth().signOut()
     }
 
-    public var currentUser: User? {
+    public var currentUser: AuthUser? {
         print("🖐️ Auth: -------- current User")
         guard let user = Auth.auth().currentUser else { return nil }
-        return user
+        return user.getAuthUser()
     }
     
     public func getUserId() throws -> String {
@@ -60,10 +61,10 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
     }
 
     
-    public func getCurrentUser() -> User? {
+    public func getCurrentUser() -> AuthUser? {
         print("🖐️ Auth: -------- current User")
         guard let user = Auth.auth().currentUser else { return nil }
-        return user
+        return user.getAuthUser()
     }
     
     public func signInWithGoogle(idToken: String, accessToken: String) async throws -> AuthResult {
@@ -174,7 +175,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }
 
-    public func upgradeToApple(idToken: String, nonce: String) async throws -> User {
+    public func upgradeToApple(idToken: String, nonce: String) async throws -> AuthUser {
         // ✅ Apple fullName은 Firebase credential에 직접 넣을 수 있는 API가 일관적이지 않아서
         // 여기서는 idToken + nonce만으로 credential 생성(표준 방식)
         let credential = OAuthProvider.credential(
@@ -187,7 +188,7 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
         do {
             // 1) 익명 -> link
             let user = try await upgradeWithCredential(credential)
-            return user
+            return user.getAuthUser()
         } catch {
             // 2) "이미 다른 계정이 이 credential을 가지고 있음"이면 sign-in으로 fallback
             let nsError = error as NSError
@@ -197,14 +198,14 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
             case .emailAlreadyInUse, .credentialAlreadyInUse, .accountExistsWithDifferentCredential:
                 print("이미 있는 계정이라 sign-in으로 fallback")
                 let (user, _) = try await signInWithCredential(credential)
-                return user
+                return user.getAuthUser()
             default:
                 throw error
             }
         }
     }
 
-    public func signInWithApple(idToken: String, nonce: String) async throws -> User {
+    public func signInWithApple(idToken: String, nonce: String) async throws -> AuthUser {
         let credential = OAuthProvider.credential(
             providerID: AuthProviderID.apple,
             idToken: idToken,
@@ -212,6 +213,6 @@ public final class FirebaseAuthService: AuthServiceProtocol, AppleAuthLinking {
             accessToken: nil
         )
         let (user, _) = try await signInWithCredential(credential)
-        return user
+        return user.getAuthUser()
     }
 }

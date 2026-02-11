@@ -45,7 +45,7 @@ public final class AuthKit {
     /// - email/name/userId는 다음에 nil일 수 있으니 Keychain에 저장(UX 유지)
     /// - FirebaseAuthService가 link 시도 + 중복이면 sign-in fallback 처리
     @MainActor
-    public func upgradeAnonymousWithApple() async throws -> User {
+    public func upgradeAnonymousWithApple() async throws -> AuthUser {
         // 1) Apple UI 띄워 payload 확보
         let apple = try await appleUI.authorize()
         print("apple에서 주는 데이터 - email", apple.email)

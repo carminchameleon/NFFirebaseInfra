@@ -8,9 +8,9 @@
 import FirebaseAuth
 import SwiftUI
 public protocol AuthServiceProtocol: Sendable {
-    func signInAnonymously() async throws -> User
+    func signInAnonymously() async throws -> AuthUser
     func signOut() async throws
     func upgradeToGoogle(idToken: String, accessToken: String) async throws -> AuthResult
-    var currentUser: User? { get }
+    var currentUser: AuthUser? { get }
     
 }
